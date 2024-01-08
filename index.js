@@ -1,61 +1,49 @@
 import fs from 'node:fs';
-import http from 'node:http';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
-import url from 'node:url';
-import replaceTemplate from './modules/replaceTemplate.js';
+import superagent from 'superagent';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const data = fs.readFileSync(`${__dirname}/data/data.json`, 'utf-8');
-const tempOverview = fs.readFileSync(
-  `${__dirname}/templates/template-overview.html`,
-  'utf-8'
-);
-const tempCard = fs.readFileSync(
-  `${__dirname}/templates/template-card.html`,
-  'utf-8'
-);
-const tempProduct = fs.readFileSync(
-  `${__dirname}/templates/product.html`,
-  'utf-8'
-);
-const dataObj = JSON.parse(data);
-
-// replace the placeholders with the actual data
-
-// server the real deal
-const server = http.createServer((req, res) => {
-  const pathName = req.url;
-  const { query, pathname } = url.parse(req.url, true);
-  // Overview page
-  if (pathname === '/' || pathname === '/overview') {
-    res.writeHead(200, { 'Content-type': 'text/html' });
-    const cardsHtml = dataObj
-      .map((el) => replaceTemplate(tempCard, el))
-      .join('');
-    const output = tempOverview.replace('{%PRODUCT_CARDS%}', cardsHtml);
-    res.end(output);
-    // Product page
-  } else if (pathname === '/product') {
-    const product = dataObj[query.id];
-    const output = replaceTemplate(tempProduct, product);
-    res.end(output);
-    // API page
-  } else if (pathname === '/api') {
-    res.writeHead(200, { 'Content-type': 'application/json' });
-    res.end(data);
-    // Not found
-  } else {
-    res.writeHead(404, {
-      'Content-type': 'text/html',
-      'my-own-header': 'hello-world',
+const readFilePro = (file) => {
+  // we are returning a promise insted of the callback func because I can user the resolve and reject params
+  // (they are realy functions) for more handling I guss
+  return new Promise((resolve, reject) => {
+    fs.readFile(file, (err, data) => {
+      // the data (the params of the resolved function) will be available in the 'catch' methode
+      if (err) reject('I could not find the link 😅');
+      // the data (the params of the resolved function) will be available in the 'then' methode
+      resolve(data);
     });
-    res.end('<h1>Page not found</h1>');
-  }
-});
+  });
+};
 
-server.listen(8000, 'localhost', () => {
-  console.log('the server has strated listening');
-});
+const writeFilePro = (file, data) => {
+  return new Promise((resolve, reject) => {
+    fs.writeFile(file, data, (err) => {
+      if (err) reject('could not write the file 😅');
+      resolve('succes');
+    });
+  });
+};
+
+readFilePro(`${__dirname}/dog.txt`)
+  .then((data) => {
+    console.log(`the breed: ${data}`);
+    return superagent.get(`https://dog.ceo/api/breed/${data}/images/random`);
+  })
+  .then((res) => {
+    console.log(res.body.message);
+    return writeFilePro(`${__dirname}/dog_image.txt`, res.body.message);
+    // fs.writeFile('dog_image.txt', res.body.message, (err) => {
+    //   if (err) console.log(err);
+    //   console.log('dog image saved 🔥👌');
+    // });
+  })
+  .then(() => {
+    console.log('dog image saved 🔥👌');
+  })
+  .catch((err) => {
+    console.log(err.message);
+  });
