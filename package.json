@@ -1,0 +1,17 @@
+{
+  "name": "node-js",
+  "lockfileVersion": 3,
+  "requires": true,
+  "type": "module",
+  "packages": {},
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "slugify": "^1.6.6"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
