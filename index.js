@@ -41,10 +41,25 @@ const goDogPic = async () => {
     console.log('dog image is saved');
   } catch (err) {
     console.log(err);
+    throw err;
   }
+  return 'all good';
 };
 
-goDogPic();
+(async () => {
+  try {
+    console.log('start the async fun');
+
+    const getTheData = await goDogPic();
+    console.log(getTheData);
+
+    console.log('end the async fun');
+  } catch (err) {
+    console.log('ERROR 💥');
+  }
+})();
+
+// goDogPic();
 
 // this code is using 'then' and 'catch'
 // readFilePro(`${__dirname}/dog.txt`)
